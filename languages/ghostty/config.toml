@@ -1,5 +1,8 @@
 name = "Ghostty"
 grammar = "ghostty"
-path_suffixes = ["ghostty/config"]
+path_suffixes = [
+  "ghostty/config",
+  "config/ghostty/config",
+]
 line_comments = ["#"]
-scopes = ["source.ghostty"]  # opzionale, aiuta il tema a sapere che lingua è
+scopes = ["source.ghostty"]
