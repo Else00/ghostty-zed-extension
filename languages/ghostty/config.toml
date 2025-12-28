@@ -3,6 +3,7 @@ grammar = "ghostty"
 path_suffixes = [
   "ghostty/config",
   "config/ghostty/config",
+  ".ghostty",
 ]
 line_comments = ["#"]
 scopes = ["source.ghostty"]
