@@ -1,3 +1,4 @@
+use serde::de::{self, Deserializer};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::sync::RwLock;
@@ -23,8 +24,8 @@ struct ConfigOption {
     description: String,
     #[serde(default)]
     repeatable: bool,
-    #[serde(default)]
-    deprecated: bool,
+    #[serde(default, deserialize_with = "deserialize_deprecated")]
+    deprecated: Option<String>,
     #[serde(rename = "enum")]
     enum_values: Option<Vec<String>>,
     examples: Option<Vec<String>>,
@@ -48,6 +49,19 @@ struct KeybindType {
 struct ColorType {
     #[serde(rename = "namedValues")]
     named_values: Option<Vec<String>>,
+}
+
+fn deserialize_deprecated<'de, D>(deserializer: D) -> std::result::Result<Option<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value: serde_json::Value = Deserialize::deserialize(deserializer)?;
+    match value {
+        serde_json::Value::Bool(false) | serde_json::Value::Null => Ok(None),
+        serde_json::Value::Bool(true) => Ok(Some("Deprecated".to_string())),
+        serde_json::Value::String(s) => Ok(Some(s)),
+        _ => Err(de::Error::custom("expected bool or string for deprecated")),
+    }
 }
 
 struct GhosttyLsp {
@@ -87,7 +101,7 @@ impl GhosttyLsp {
                     insert_text_format: Some(InsertTextFormat::PLAIN_TEXT),
                     ..Default::default()
                 };
-                if opt.deprecated {
+                if opt.deprecated.is_some() {
                     item.tags = Some(vec![CompletionItemTag::DEPRECATED]);
                     item.sort_text = Some(format!("z_{}", key));
                 }
@@ -108,7 +122,11 @@ impl GhosttyLsp {
     }
 
     fn format_key_documentation(&self, key: &str, opt: &ConfigOption) -> String {
-        let mut doc = opt.description.clone();
+        let mut doc = String::new();
+        if let Some(msg) = &opt.deprecated {
+            doc.push_str(&format!("**Deprecated:** {}\n\n", msg));
+        }
+        doc.push_str(&opt.description);
         if let Some(examples) = &opt.examples {
             doc.push_str("\n\n**Examples:**\n");
             for ex in examples.iter().take(3) {
