@@ -7,5 +7,5 @@ path_suffixes = [
   "ghostty"
 ]
 first_line_pattern = '#\s*(vim?:\s*(set\s+)?ft=ghostty|-\*-\s*(mode:\s*)?ghostty\s*-\*-)'
-line_comments = ["#"]
+line_comments = ["# "]
 scopes = ["source.ghostty"]
